@@ -1,0 +1,33 @@
+#点1-传感器分配问题
+df.groupby('grip_success')[['s1_ratio','s2_ratio','s3_ratio']].mean()#s2_ratio特殊
+fail_df = df[df['grip_success'] == 0];
+fail_df['s2_ratio'].describe()
+for i in [0,1]:
+    fail_df = df[df['grip_success'] == i]
+    low_fail = fail_df[fail_df['s2_ratio'] < 0.23]
+    high_fail = fail_df[fail_df['s2_ratio'] >0.42]
+    print(f"{i}的总数:{len(fail_df)}\n"f"<0.23的数量是:{len(low_fail)},占比:{len(low_fail)/len(fail_df)*100:.2f}%\n"f">0.42的数量是:{len(high_fail)},占比:{len(high_fail)/len(fail_df)*100:.2f}%")
+#不是传感器分配问题
+#点2-预估力稳定性
+df['weight_group'] = pd.cut(df['weight'], bins=range(0, 1001, 50))
+df['size_group'] = pd.cut(df['size'], bins=range(0, 21, 5))
+# 按重量+尺寸+纹理分组，计算每组预估力的标准差和样本数
+group_stats = df.groupby(['weight_group', 'size_group', 'texture'])['required_grip_force'].agg(['std', 'count', 'mean'])
+group_stats = group_stats.dropna()  # 去掉空组
+group_stats = group_stats.sort_values('std', ascending=False)
+group_stats.head(10)
+#各组预估力标准差分布
+plt.figure(figsize=(10, 5))
+plt.hist(group_stats['std'], bins=30, color='steelblue', edgecolor='black')
+plt.axvline(x=6, color='red', linestyle='--', label='波动阈值 std=6')
+plt.xlabel('预估力标准差 (N)')
+plt.ylabel('组数')
+plt.title('各组内预估力的标准差分布')
+plt.legend()
+plt.savefig('std_distribution.png', dpi=150)
+plt.show()
+# 对比高波动组和低波动组的成功率
+high_std_groups = group_stats[group_stats['std'] > 6].index.tolist()
+df['is_high_variance'] = df.set_index(['weight_group', 'size_group', 'texture']).index.isin(high_std_groups)
+df.groupby('is_high_variance')['grip_success'].mean()
+#成功率差不多
