@@ -10,19 +10,19 @@
 df = df[df['required_grip_force'] >= 0]
 第二步：验证传感器分配问题，三个传感器是否分配不合理
 计算每个传感器占总力的比例，发现s2_ratio特殊，对比成功与失败案例中s2_ratio的值
-[预估力标准差分布](images/std_distribution_analysis.png)
+[预估力标准差分布]https://github.com/user-attachments/assets/e3b9f955-93bb-4fcc-8f29-a8a65c3c7811
 结论：成功与失败案例中传感器2占比比例接近，不是主要问题
 第三步：验证验证预估力稳定性问题
 按重量，尺寸，纹理进行分组，计算估计力的标准差
 结论：比例相近，不是主要问题
 按预估力分段统计成功率，发现特殊值11N
-[实际力 VS 估计力](images/actual_vs_predicted_force.png)
+[实际力 VS 估计力]https://github.com/user-attachments/assets/e0eb99b7-8247-4205-9801-e9a95a1a3c01
 临界值11N十分明显
 第四步：对预估力低于11N的样本里，有324条异常低估数据（重量>300g或者尺寸>10mm),这些样本的失败率为100%
 结论：算法对300-500g的中等重量物体存在系统性低估
 第五步：对预估力分段统计成功率
 <11N:0.3%     >=11N:99.7%
 高预估力组共1404条样本，仅4条失败
-[高估计力组失败案例](images/high_force_failure_cases.png)
+[高估计力组失败案例]https://github.com/user-attachments/assets/67c65f4c-7ca8-412a-b5a9-abd5e088b0aa
 最终结论：问题不在于执行层（实际力足够大），而在于算法对部分物体的预估力严重偏低。只要算法给出 ≥11N 的预估力，成功率可达 99.7%。建议算法团队针对 300-500g 重量段的物体重新校准模型。
 
