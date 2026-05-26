@@ -1,0 +1,50 @@
+from sklearn.ensemble import RandomForestClassifier
+# 只用原始三个特征
+x = df[['weight', 'size', 'texture']]
+y = df['grip_success']
+# 划分数据
+x_temp, x_test, y_temp, y_test = train_test_split(
+    x, y, test_size=0.2, random_state=42, stratify=y
+)
+x_train, x_val, y_train, y_val = train_test_split(
+    x_temp, y_temp, test_size=0.25, random_state=42, stratify=y_temp
+)
+# 随机森林
+model = RandomForestClassifier(
+    n_estimators=200,
+    max_depth=5,
+    min_samples_split=10,
+    min_samples_leaf=5,
+    random_state=42
+)
+model.fit(x_train, y_train)
+# 获取验证集的预测概率
+y_val_proba = model.predict_proba(x_val)[:, 1]
+# 尝试不同阈值
+thresholds = [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60]
+print("验证集上不同阈值的效果:")
+print("阈值\t准确率\t召回率\t精确率")
+print("-"*50)
+best_threshold = 0.40
+best_recall = 0
+for thresh in thresholds:
+    y_pred = (y_val_proba >= thresh).astype(int)
+    acc = accuracy_score(y_val, y_pred)
+    rec = recall_score(y_val, y_pred)
+    prec = precision_score(y_val, y_pred)
+    print(f"{thresh:.2f}\t{acc:.4f}\t{rec:.4f}\t{prec:.4f}")
+    # 选择召回率最高的阈值（安全优先）
+    if rec > best_recall:
+        best_recall = rec
+        best_threshold = thresh
+print(f"\n选择阈值: {best_threshold:.2f} (基于最高召回率)")
+y_test_proba = model.predict_proba(X_test)[:, 1]
+y_test_pred = (y_test_proba >= best_threshold).astype(int)
+print("="*50)
+print("测试集最终评估结果")
+print("="*50)
+print(f"阈值: {best_threshold:.2f}")
+print(f"准确率: {accuracy_score(y_test, y_test_pred):.4f}")
+print(f"精确率: {precision_score(y_test, y_test_pred):.4f}")
+print(f"召回率: {recall_score(y_test, y_test_pred):.4f}")
+print(f"F1分数: {f1_score(y_test, y_test_pred):.4f}")
