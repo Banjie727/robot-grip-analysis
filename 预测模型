@@ -54,7 +54,7 @@ model = xgb.XGBClassifier(
     eval_metric='logloss'
 )
 model.fit(x_train, y_train)
-print("✅ 模型训练完成")    
+print("模型训练完成")    
 #验证集评估
 y_val_pred = model.predict(x_val)
 print("="*50)
