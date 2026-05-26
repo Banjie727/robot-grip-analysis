@@ -1,0 +1,71 @@
+#包的导入，数据清理
+import pandas as pd
+import numpy as np
+import xgboost as xgb
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
+df = pd.read_csv(r"D:\TEMP\archive\robot_grip.csv");
+df = df[df['required_grip_force'] >=0]#去除无效值
+#特征和标签
+x = df[['weight','size','texture']]
+y = df['grip_success']
+print(f"特征形状: {x.shape}")
+#划分数据集
+x_temp,x_test,y_temp,y_test = train_test_split(x,y,test_size=0.2,random_state=42)#测试集20%
+x_train,x_val,y_train,y_val = train_test_split(x_temp,y_temp,test_size=0.25,random_state=42)#验证集20%
+print(f"训练集:{len(x_train)},验证集:{len(x_val)},训练集:{len(x_test)}")
+#训练XGBoost模型
+model = xgb.XGBClassifier(
+    n_estimators=100,      # 树的数量
+    max_depth=4,           # 每棵树的最大深度
+    learning_rate=0.1,     # 学习率
+    random_state=42,
+    eval_metric='logloss'
+)
+model.fit(x_train, y_train)
+print("✅ 模型训练完成")    
+#验证集评估
+y_val_pred = model.predict(x_val)
+print("="*50)
+print("验证集评估结果")
+print("="*50)
+print(f"准确率 (Accuracy): {accuracy_score(y_val, y_val_pred):.4f}")
+print(f"精确率 (Precision): {precision_score(y_val, y_val_pred):.4f}")
+print(f"召回率 (Recall): {recall_score(y_val, y_val_pred):.4f}")
+print(f"F1分数: {f1_score(y_val, y_val_pred):.4f}")
+#混淆矩阵
+cm = confusion_matrix(y_val, y_val_pred)
+plt.figure(figsize=(6, 5))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.xlabel('预测值')
+plt.ylabel('真实值')
+plt.title('验证集混淆矩阵')
+plt.show()
+#测试集
+y_test_pred = model.predict(x_test)
+print("="*50)
+print("测试集最终评估")
+print("="*50)
+print(f"准确率 (Accuracy): {accuracy_score(y_test, y_test_pred):.4f}")
+print(f"精确率 (Precision): {precision_score(y_test, y_test_pred):.4f}")
+print(f"召回率 (Recall): {recall_score(y_test, y_test_pred):.4f}")
+print(f"F1分数: {f1_score(y_test, y_test_pred):.4f}")
+#特征排序
+importance = model.feature_importances_
+features = ['weight', 'size', 'texture']
+plt.figure(figsize=(8, 5))
+plt.barh(features, importance, color='steelblue')
+plt.xlabel('重要性')
+plt.title('XGBoost 特征重要性')
+for i, v in enumerate(importance):
+    plt.text(v + 0.01, i, f'{v:.3f}')
+plt.tight_layout()
+plt.savefig('feature_importance_classifier.png', dpi=150)
+plt.show()
+print("\n特征重要性排序:")
+for f, imp in sorted(zip(features, importance), key=lambda x: x[1], reverse=True):
+    print(f"  {f}: {imp:.3f}")
