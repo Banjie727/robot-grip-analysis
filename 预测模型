@@ -70,7 +70,7 @@ plt.show()
 print("\n特征重要性排序:")
 for f, imp in sorted(zip(features, importance), key=lambda x: x[1], reverse=True):
     print(f"  {f}: {imp:.3f}")
-#树森林
+#随机森林
 from sklearn.ensemble import RandomForestClassifier
 # 只用原始三个特征
 x = df[['weight', 'size', 'texture']]
