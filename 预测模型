@@ -19,6 +19,32 @@ print(f"特征形状: {x.shape}")
 x_temp,x_test,y_temp,y_test = train_test_split(x,y,test_size=0.2,random_state=42)#测试集20%
 x_train,x_val,y_train,y_val = train_test_split(x_temp,y_temp,test_size=0.25,random_state=42)#验证集20%
 print(f"训练集:{len(x_train)},验证集:{len(x_val)},训练集:{len(x_test)}")
+#线性相关性验证
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+# 特征和标签
+x = df[['weight', 'size', 'texture']]
+y = df['required_grip_force']
+# 训练线性回归
+model = LinearRegression()
+model.fit(x, y)
+# 预测并计算 R²
+y_pred = model.predict(x)
+r2 = r2_score(y, y_pred)
+print(f"线性回归 R² = {r2:.4f}")
+print(f"\n模型系数:")
+print(f"  weight: {model.coef_[0]:.4f}")
+print(f"  size: {model.coef_[1]:.4f}")
+print(f"  texture: {model.coef_[2]:.4f}")
+print(f"  intercept: {model.intercept_:.4f}")
+# 可视化：真实值 vs 预测值
+plt.figure(figsize=(8, 6))
+plt.scatter(y, y_pred, alpha=0.3)
+plt.plot([y.min(), y.max()], [y.min(), y.max()], 'r--')
+plt.xlabel('真实 required_grip_force (N)')
+plt.ylabel('预测 required_grip_force (N)')
+plt.title(f'线性回归拟合效果 (R² = {r2:.4f})')
+plt.show()
 #训练XGBoost模型
 model = xgb.XGBClassifier(
     n_estimators=100,      # 树的数量
